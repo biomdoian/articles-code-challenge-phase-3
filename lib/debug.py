@@ -1,7 +1,7 @@
 from lib.db.connection import get_connection
-from lib.models.author import Author
-from lib.models.magazine import Magazine
-from lib.models.article import Article
+#from lib.models.author import Author
+#from lib.models.magazine import Magazine
+#from lib.models.article import Article
 def debug_cli():
     print("Welcome to the Debug CLI!")
     conn = get_connection()
