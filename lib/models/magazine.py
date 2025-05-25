@@ -138,3 +138,59 @@ class Magazine:
                 magazine = cls(name=row['name'], category=row['category'], id=row['id'])
                 return magazine
         return None
+    def articles(self):
+        """Returns a list of articles published in this magazine."""
+        from lib.models.article import Article 
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE magazine_id = ?", (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [Article(row['title'], row['content'], row['author_id'], row['magazine_id'], row['id']) for row in rows]
+
+    def authors(self):
+        """Returns a list of unique authors who have contributed to this magazine."""
+        from lib.models.author import Author
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT authors.id, authors.name
+            FROM authors
+            INNER JOIN articles ON authors.id = articles.author_id
+            WHERE articles.magazine_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [Author(row['name'], row['id']) for row in rows]
+
+    def article_titles(self):
+        """Returns a list of all titles of articles published in this magazine."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT title FROM articles WHERE magazine_id = ?", (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [row['title'] for row in rows]
+
+    def contributing_authors(self):
+        """
+        Returns a list of authors who have written more than 2 articles for this magazine.
+        Returns None if no such authors.
+        """
+        from lib.models.author import Author 
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT authors.id, authors.name, COUNT(articles.id) as article_count
+            FROM authors
+            INNER JOIN articles ON authors.id = articles.author_id
+            WHERE articles.magazine_id = ?
+            GROUP BY authors.id, authors.name
+            HAVING article_count > 2
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            return None
+        return [Author(row['name'], row['id']) for row in rows]

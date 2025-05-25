@@ -116,3 +116,39 @@ class Author:
                 author = cls(name=row['name'], id=row['id'])
                 return author
         return None
+    def articles(self):
+        """Returns a list of Articles written by the author."""
+        from lib.models.article import Article
+        conn= get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM articles WHERE author_id = ?", (self._id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return[Article(row['title'], row['content'], row['author_id'], row['magazine_id'], row['id']) for row in rows]
+    def magazines(self):
+        """Returns a list of Magazines that the author has contributed to."""
+        from lib.models.magazine import Magazine
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+                       SELECT DISTINCT magazines. id, magazines.name, magazines. category
+                        FROM magazines 
+                       INNER JOIN articles ON magazines.id = articles.magazine_id 
+                       WHERE articles.author_id = ?""", (self._id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [Magazine(name=row['name'], category=row['category'], id=row['id']) for row in rows]
+    
+    def topic_areas(self):
+        """Returns a list of unique categories of magazines the author has contributed to."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT DISTINCT M.category
+            FROM magazines M
+            INNER JOIN articles A ON M.id = A.magazine_id
+            WHERE A.author_id = ?
+        """, (self.id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [row['category'] for row in rows if row['category']]

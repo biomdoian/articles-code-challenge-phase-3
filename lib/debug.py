@@ -15,6 +15,7 @@ def debug_cli():
     except Exception as e:
         print(f"Error checking tables: {e}")
     conn.close()
+
 print("Exiting Debug CLI.")
 if __name__ == "__main__":
     debug_cli()
