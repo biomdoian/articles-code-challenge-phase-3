@@ -1,25 +1,24 @@
 from lib.db.connection import get_connection
 
 class Magazine:
-    _all_magazines = {} 
+    CONN = get_connection()
+    CURSOR = CONN.cursor()
 
-    # Validate name and category upon initialization
+    _all_magazines = {} # Cache for all magazines
+
     def __init__(self, name, category, id=None):
-        if not isinstance(name, str) or not (2 <= len(name) <= 16):
-            raise ValueError("Name must be a string between 2 and 16 characters, inclusive.")
-        if not isinstance(category, str) or len(category) == 0:
-            raise ValueError("Category must be a non-empty string.")
-        self._name = name
-        self._category = category
-        self._id = id
-
-        # If id is not None, add to cache
-        if id is not None:
-            Magazine._all_magazines[id] = self
+        self.id = id
+        # Use setters for validation
+        self.name = name
+        self.category = category
 
     @property
     def id(self):
         return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value # ID is set by the database
 
     @property
     def name(self):
@@ -27,15 +26,11 @@ class Magazine:
 
     @name.setter
     def name(self, value):
-        if not isinstance(value, str) or not (2 <= len(value) <= 16):
+        if not isinstance(value, str):
+            raise TypeError("Name must be a string.")
+        if not (2 <= len(value) <= 16):
             raise ValueError("Name must be a string between 2 and 16 characters, inclusive.")
         self._name = value
-        if self._id is not None: # Update DB if already saved
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute("UPDATE magazines SET name = ? WHERE id = ?", (value, self._id))
-            conn.commit()
-            conn.close()
 
     @property
     def category(self):
@@ -43,154 +38,118 @@ class Magazine:
 
     @category.setter
     def category(self, value):
-        if not isinstance(value, str) or len(value) == 0:
+        if not isinstance(value, str):
+            raise TypeError("Category must be a string.")
+        if len(value) == 0:
             raise ValueError("Category must be a non-empty string.")
         self._category = value
-        if self._id is not None: 
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute("UPDATE magazines SET category = ? WHERE id = ?", (value, self._id))
-            conn.commit()
-            conn.close()
 
     def save(self):
-        """Saves the current Magazine instance to the database."""
-        conn = get_connection()
-        cursor = conn.cursor()
-        if self._id is None:
-            cursor.execute("INSERT INTO magazines (name, category) VALUES (?, ?)", (self.name, self.category))
-            self._id = cursor.lastrowid
-            Magazine._all_magazines[self._id] = self
+        if self.id is None:
+            sql = """
+                INSERT INTO magazines (name, category)
+                VALUES (?, ?)
+            """
+            Magazine.CURSOR.execute(sql, (self.name, self.category))
+            self.id = Magazine.CURSOR.lastrowid
+            Magazine._all_magazines[self.id] = self
         else:
-            cursor.execute("UPDATE magazines SET name = ?, category = ? WHERE id = ?", (self.name, self.category, self._id))
-        conn.commit()
-        conn.close()
-
-    def delete(self):
-        """Deletes the current Magazine instance from the database."""
-        if self._id is None:
-            raise ValueError("Cannot delete a magazine not saved to the database.")
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM magazines WHERE id = ?", (self._id,))
-        conn.commit()
-        conn.close()
-       
-        if self._id in Magazine._all_magazines:
-            del Magazine._all_magazines[self._id]
-        self._id = None  # Clear the ID after deletion
+            sql = """
+                UPDATE magazines
+                SET name = ?, category = ?
+                WHERE id = ?
+            """
+            Magazine.CURSOR.execute(sql, (self.name, self.category, self.id))
+            Magazine._all_magazines[self.id] = self
+        Magazine.CONN.commit()
 
     @classmethod
     def create(cls, name, category):
-        """Creates a new Magazine instance and saves it."""
         magazine = cls(name, category)
         magazine.save()
         return magazine
 
-    # Retrieves all magazines from the database.
-    @classmethod
-    def get_all(cls):
-        """Returns all magazines from the database."""
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM magazines")
-        rows = cursor.fetchall()
-        conn.close()
-        magazines_list = []
-        for row in rows:
-            if row['id'] in cls._all_magazines:
-                magazines_list.append(cls._all_magazines[row['id']])
-            else:
-                magazine_instance = cls(name=row['name'], category=row['category'], id=row['id']) # Use a clear variable for the instance
-                magazines_list.append(magazine_instance)
-        return magazines_list 
+    def delete(self):
+        sql = "DELETE FROM magazines WHERE id = ?"
+        Magazine.CURSOR.execute(sql, (self.id,))
+        Magazine.CONN.commit()
+        if self.id in Magazine._all_magazines:
+            del Magazine._all_magazines[self.id]
+        self.id = None
 
-    # Retrieves a magazine by its ID from the database.
     @classmethod
     def find_by_id(cls, id):
-        """Finds a magazine by its ID."""
         if id in cls._all_magazines:
             return cls._all_magazines[id]
 
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM magazines WHERE id = ?", (id,))
-        row = cursor.fetchone()
-        conn.close()
+        sql = "SELECT * FROM magazines WHERE id = ?"
+        Magazine.CURSOR.execute(sql, (id,))
+        row = Magazine.CURSOR.fetchone()
         if row:
-            magazine = cls(name=row['name'], category=row['category'], id=row['id'])
+            magazine = cls(row['name'], row['category'], row['id'])
+            cls._all_magazines[magazine.id] = magazine
             return magazine
         return None
 
-    # Retrieves a magazine by its name from the database.
     @classmethod
     def find_by_name(cls, name):
-        """Finds a magazine by its name (case-insensitive)."""
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM magazines WHERE name LIKE ?", (name,))
-        row = cursor.fetchone()
-        conn.close()
+        sql = "SELECT * FROM magazines WHERE name = ?"
+        Magazine.CURSOR.execute(sql, (name,))
+        row = Magazine.CURSOR.fetchone()
         if row:
-            if row['id'] in cls._all_magazines:
-                return cls._all_magazines[row['id']]
-            else:
-                magazine = cls(name=row['name'], category=row['category'], id=row['id'])
-                return magazine
+            magazine = cls(row['name'], row['category'], row['id'])
+            cls._all_magazines[magazine.id] = magazine
+            return magazine
         return None
+
+    @classmethod
+    def get_all(cls):
+        sql = "SELECT * FROM magazines"
+        Magazine.CURSOR.execute(sql)
+        rows = Magazine.CURSOR.fetchall()
+        return [cls(row['name'], row['category'], row['id']) for row in rows]
+
     def articles(self):
-        """Returns a list of articles published in this magazine."""
-        from lib.models.article import Article 
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM articles WHERE magazine_id = ?", (self.id,))
-        rows = cursor.fetchall()
-        conn.close()
+        from lib.models.article import Article # Local import to avoid circular dependency
+        sql = "SELECT * FROM articles WHERE magazine_id = ?"
+        Magazine.CURSOR.execute(sql, (self.id,))
+        rows = Magazine.CURSOR.fetchall()
         return [Article(row['title'], row['content'], row['author_id'], row['magazine_id'], row['id']) for row in rows]
 
     def authors(self):
-        """Returns a list of unique authors who have contributed to this magazine."""
-        from lib.models.author import Author
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT DISTINCT authors.id, authors.name
+        from lib.models.author import Author # Local import to avoid circular dependency
+        sql = """
+            SELECT DISTINCT authors.*
             FROM authors
-            INNER JOIN articles ON authors.id = articles.author_id
+            JOIN articles ON authors.id = articles.author_id
             WHERE articles.magazine_id = ?
-        """, (self.id,))
-        rows = cursor.fetchall()
-        conn.close()
+        """
+        Magazine.CURSOR.execute(sql, (self.id,))
+        rows = Magazine.CURSOR.fetchall()
         return [Author(row['name'], row['id']) for row in rows]
 
     def article_titles(self):
-        """Returns a list of all titles of articles published in this magazine."""
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT title FROM articles WHERE magazine_id = ?", (self.id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [row['title'] for row in rows]
+        articles_in_magazine = self.articles()
+        return [article.title for article in articles_in_magazine] if articles_in_magazine else None
+
 
     def contributing_authors(self):
-        """
-        Returns a list of authors who have written more than 2 articles for this magazine.
-        Returns None if no such authors.
-        """
-        from lib.models.author import Author 
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
+        from lib.models.author import Author # Local import to avoid circular dependency
+        sql = """
             SELECT authors.id, authors.name, COUNT(articles.id) as article_count
             FROM authors
-            INNER JOIN articles ON authors.id = articles.author_id
+            JOIN articles ON authors.id = articles.author_id
             WHERE articles.magazine_id = ?
             GROUP BY authors.id, authors.name
-            HAVING article_count > 2
-        """, (self.id,))
-        rows = cursor.fetchall()
-        conn.close()
-
+            HAVING article_count >= 2
+        """
+        Magazine.CURSOR.execute(sql, (self.id,))
+        rows = Magazine.CURSOR.fetchall()
+        
         if not rows:
-            return None
+            return None # Return None if no authors contribute >= 2 articles
+        
         return [Author(row['name'], row['id']) for row in rows]
+
+    def __repr__(self):
+        return f"<Magazine ID: {self.id}, Name: {self.name}, Category: {self.category}>"

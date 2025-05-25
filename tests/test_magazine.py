@@ -32,7 +32,7 @@ def test_magazine_creation(setup_db):
     assert magazine.id is None # ID should be None before saving
 
 def test_magazine_save(setup_db):
-    magazine = Magazine("National Geographic", "Science")
+    magazine = Magazine("Nat Geographic", "Science")
     magazine.save()
     assert magazine.id is not None
     conn = get_connection()
@@ -56,7 +56,7 @@ def test_magazine_find_by_id_not_found(setup_db):
     assert Magazine.find_by_id(999) is None
 
 def test_magazine_find_by_name(setup_db):
-    magazine = Magazine("Sports Illustrated", "Sports")
+    magazine = Magazine("Sports Illus", "Sports")
     magazine.save()
     found_magazine = Magazine.find_by_name("Sports Illustrated")
     assert found_magazine is not None
@@ -119,7 +119,7 @@ def test_magazine_delete(setup_db):
 
 def test_magazine_articles(setup_db):
     author = Author.create("Test Author for Mag Articles")
-    magazine = Magazine.create("Test Mag for Articles", "Tech")
+    magazine = Magazine.create("Test Mag Arts", "Tech")
 
     article1 = Article.create("Mag Article 1", "Content 1", author.id, magazine.id)
     article2 = Article.create("Mag Article 2", "Content 2", author.id, magazine.id)
@@ -134,7 +134,7 @@ def test_magazine_authors(setup_db):
     author1 = Author.create("Author 1 for Magazine")
     author2 = Author.create("Author 2 for Magazine")
     author3 = Author.create("Author 3 for Magazine") # Not associated
-    magazine = Magazine.create("Test Mag for Authors", "Tech")
+    magazine = Magazine.create("Test Mag Auth", "Tech")
 
     Article.create("Article A", "Content A", author1.id, magazine.id)
     Article.create("Article B", "Content B", author2.id, magazine.id)
@@ -149,7 +149,7 @@ def test_magazine_authors(setup_db):
 
 def test_magazine_article_titles(setup_db):
     author = Author.create("Test Author for Titles")
-    magazine = Magazine.create("Test Mag for Titles", "Tech")
+    magazine = Magazine.create("Test Mag Titles", "Tech")
 
     Article.create("Title One", "Content 1", author.id, magazine.id)
     Article.create("Title Two", "Content 2", author.id, magazine.id)

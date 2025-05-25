@@ -133,7 +133,7 @@ def test_article_magazine_id_validation(setup_db):
 
 def test_article_author_property(setup_db):
     author = Author.create("Property Author")
-    magazine = Magazine.create("Property Magazine", "Travel")
+    magazine = Magazine.create("Prop Mag", "Travel")
     article = Article.create("Prop Article", "Content", author.id, magazine.id)
     retrieved_author = article.author()
     assert retrieved_author.name == "Property Author"
@@ -142,7 +142,7 @@ def test_article_author_property(setup_db):
 
 def test_article_magazine_property(setup_db):
     author = Author.create("Prop Author 2")
-    magazine = Magazine.create("Property Magazine 2", "History")
+    magazine = Magazine.create("Prop Mag 2", "History")
     article = Article.create("Prop Article 2", "Content 2", author.id, magazine.id)
     retrieved_magazine = article.magazine()
     assert retrieved_magazine.name == "Property Magazine 2"
