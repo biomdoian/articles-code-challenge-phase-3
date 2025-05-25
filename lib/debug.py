@@ -1,5 +1,5 @@
 from lib.db.connection import get_connection
-# from lib.models.author import Author # We'll uncomment these later
+#from lib.models.author import Author
 # from lib.models.magazine import Magazine
 # from lib.models.article import Article
 def debug_cli():
@@ -14,8 +14,8 @@ def debug_cli():
         print(f"Tables in the database:{[t['name']for t in tables]}")
     except Exception as e:
         print(f"Error checking tables: {e}")
-    
     conn.close()
+
     print("Exiting Debug CLI.")
 if __name__ == "__main__":
     debug_cli()
