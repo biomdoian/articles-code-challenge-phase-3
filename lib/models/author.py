@@ -62,3 +62,57 @@ class Author:
         if self._id in Author._all_authors:
             del Author._all_authors[self._id]
         self._id = None
+    # Retrieves an author by ID from the cache or database.
+    @classmethod
+    def create(cls, name):
+        """Convenience method to create and save a new author."""
+        author = cls(name)
+        author.save()
+        return author
+
+    @classmethod
+    def get_all(cls):
+        """Retrieves all authors from the database."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors")
+        rows = cursor.fetchall()
+        conn.close()
+        authors = []
+        for row in rows:
+            if row['id'] not in cls._all_authors:
+                authors.append(cls._all_authors[row['id']])
+            else:
+                author = cls(name=row['name'], id=row['id'])
+                authors.append(author)
+        return authors 
+    @classmethod
+    def find_by_id(cls, id):
+        """Finds an author by their ID."""
+        if id in cls._all_authors:
+            return cls._all_authors[id]
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors WHERE id = ?", (id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            author = cls(name=row['name'], id=row['id'])
+            return author
+        return None
+    # Finds an author by their name (case-insensitive).
+    @classmethod
+    def find_by_name(cls, name):
+        """Finds an author by their name (case-insensitive)."""
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors WHERE name LIKE ?", (name,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            if row['id'] in cls._all_authors:
+                return cls._all_authors[row['id']]
+            else:
+                author = cls(name=row['name'], id=row['id'])
+                return author
+        return None
