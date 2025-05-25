@@ -16,7 +16,7 @@ def debug_cli():
         print(f"Error checking tables: {e}")
     conn.close()
 
-    print("Exiting Debug CLI.")
+print("Exiting Debug CLI.")
 if __name__ == "__main__":
     debug_cli()
 # This script is a simple CLI for debugging the database connection and checking tables.
