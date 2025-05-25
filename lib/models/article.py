@@ -54,6 +54,8 @@ class Article:
 
     @author_id.setter
     def author_id(self, value):
+        if value is None: # Check for None first
+            raise ValueError("author_id cannot be None.")
         if not isinstance(value, int):
             raise TypeError("author_id must be an integer.")
         if value <= 0:
@@ -66,6 +68,8 @@ class Article:
 
     @magazine_id.setter
     def magazine_id(self, value):
+        if value is None: # Check for None first
+            raise ValueError("magazine_id cannot be None.")
         if not isinstance(value, int):
             raise TypeError("magazine_id must be an integer.")
         if value <= 0:

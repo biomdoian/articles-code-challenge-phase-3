@@ -32,7 +32,7 @@ def test_magazine_creation(setup_db):
     assert magazine.id is None # ID should be None before saving
 
 def test_magazine_save(setup_db):
-    magazine = Magazine("Nat Geographic", "Science")
+    magazine = Magazine("Nat Geographic", "Science") # Shortened name
     magazine.save()
     assert magazine.id is not None
     conn = get_connection()
@@ -41,7 +41,7 @@ def test_magazine_save(setup_db):
     saved_magazine = cursor.fetchone()
     conn.close()
     assert saved_magazine is not None
-    assert saved_magazine['name'] == "National Geographic"
+    assert saved_magazine['name'] == "Nat Geographic" # FIX: Assertion matches shortened name
     assert saved_magazine['category'] == "Science"
 
 def test_magazine_find_by_id(setup_db):
@@ -56,11 +56,11 @@ def test_magazine_find_by_id_not_found(setup_db):
     assert Magazine.find_by_id(999) is None
 
 def test_magazine_find_by_name(setup_db):
-    magazine = Magazine("Sports Illus", "Sports")
+    magazine = Magazine("Sports Illus", "Sports") # Shortened name
     magazine.save()
-    found_magazine = Magazine.find_by_name("Sports Illustrated")
+    found_magazine = Magazine.find_by_name("Sports Illus") # FIX: Search by shortened name
     assert found_magazine is not None
-    assert found_magazine.name == "Sports Illustrated"
+    assert found_magazine.name == "Sports Illus" # FIX: Assertion matches shortened name
     assert found_magazine.id == magazine.id
 
 def test_magazine_find_by_name_not_found(setup_db):
@@ -119,7 +119,7 @@ def test_magazine_delete(setup_db):
 
 def test_magazine_articles(setup_db):
     author = Author.create("Test Author for Mag Articles")
-    magazine = Magazine.create("Test Mag Arts", "Tech")
+    magazine = Magazine.create("Test Mag Arts", "Tech") # Shortened name
 
     article1 = Article.create("Mag Article 1", "Content 1", author.id, magazine.id)
     article2 = Article.create("Mag Article 2", "Content 2", author.id, magazine.id)
@@ -134,7 +134,7 @@ def test_magazine_authors(setup_db):
     author1 = Author.create("Author 1 for Magazine")
     author2 = Author.create("Author 2 for Magazine")
     author3 = Author.create("Author 3 for Magazine") # Not associated
-    magazine = Magazine.create("Test Mag Auth", "Tech")
+    magazine = Magazine.create("Test Mag Auth", "Tech") # Shortened name
 
     Article.create("Article A", "Content A", author1.id, magazine.id)
     Article.create("Article B", "Content B", author2.id, magazine.id)
@@ -149,7 +149,7 @@ def test_magazine_authors(setup_db):
 
 def test_magazine_article_titles(setup_db):
     author = Author.create("Test Author for Titles")
-    magazine = Magazine.create("Test Mag Titles", "Tech")
+    magazine = Magazine.create("Test Mag Titles", "Tech") # Shortened name
 
     Article.create("Title One", "Content 1", author.id, magazine.id)
     Article.create("Title Two", "Content 2", author.id, magazine.id)
@@ -163,14 +163,14 @@ def test_magazine_contributing_authors(setup_db):
     author1 = Author.create("Contributor 1")
     author2 = Author.create("Contributor 2")
     author3 = Author.create("Contributor 3")
-
+    
     magazine = Magazine.create("Contr. Mag", "Tech")
-
+    
     # Author 1: 3 articles (should be contributing)
     Article.create("Art 1-1", "Cont", author1.id, magazine.id)
     Article.create("Art 1-2", "Cont", author1.id, magazine.id)
     Article.create("Art 1-3", "Cont", author1.id, magazine.id)
-
+    
     # Author 2: 2 articles (should NOT be contributing)
     Article.create("Art 2-1", "Cont", author2.id, magazine.id)
     Article.create("Art 2-2", "Cont", author2.id, magazine.id)
@@ -187,5 +187,5 @@ def test_magazine_contributing_authors(setup_db):
     magazine_no_contributors = Magazine.create("No Contr. Mag", "Science")
     author_only_one = Author.create("Only One Article")
     Article.create("One Article", "Content", author_only_one.id, magazine_no_contributors.id)
-
+    
     assert magazine_no_contributors.contributing_authors() is None

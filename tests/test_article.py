@@ -142,12 +142,13 @@ def test_article_author_property(setup_db):
 
 def test_article_magazine_property(setup_db):
     author = Author.create("Prop Author 2")
-    magazine = Magazine.create("Prop Mag 2", "History")
+    magazine = Magazine.create("Prop Mag 2", "History") 
     article = Article.create("Prop Article 2", "Content 2", author.id, magazine.id)
     retrieved_magazine = article.magazine()
-    assert retrieved_magazine.name == "Property Magazine 2"
+    assert retrieved_magazine.name == "Prop Mag 2" 
     assert retrieved_magazine.id == magazine.id
     assert isinstance(retrieved_magazine, Magazine)
+
 
 def test_article_update(setup_db):
     author = Author.create("Update Author")

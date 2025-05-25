@@ -141,7 +141,7 @@ class Magazine:
             JOIN articles ON authors.id = articles.author_id
             WHERE articles.magazine_id = ?
             GROUP BY authors.id, authors.name
-            HAVING article_count >= 2
+            HAVING article_count >= 3
         """
         Magazine.CURSOR.execute(sql, (self.id,))
         rows = Magazine.CURSOR.fetchall()
