@@ -1,0 +1,17 @@
+# Virtual environment directories
+.venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Database file (the one created by sqlite3)
+*.db
+*.sqlite3
+
+# Pytest cache
+.pytest_cache/
+
+# Pipenv specific files
+Pipfile.lock
