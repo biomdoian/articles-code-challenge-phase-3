@@ -3,7 +3,7 @@ import sqlite3
 from lib.models.author import Author
 from lib.db.connection import get_connection
 
-# Fixture to set up a clean database for each test
+
 @pytest.fixture
 def setup_db():
     conn = get_connection()
@@ -13,8 +13,7 @@ def setup_db():
     cursor.execute("DELETE FROM magazines")
     conn.commit()
     conn.close()
-    yield # This allows the test to run
-    # Teardown: Clean up after each test if necessary (optional for simple cases)
+    yield 
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM articles")
@@ -27,7 +26,7 @@ def setup_db():
 def test_author_creation(setup_db):
     author = Author("J.K. Rowling")
     assert author.name == "J.K. Rowling"
-    assert author.id is None # ID should be None before saving
+    assert author.id is None
 
 def test_author_save(setup_db):
     author = Author("Stephen King")
@@ -75,13 +74,13 @@ def test_author_get_all(setup_db):
 
 def test_author_name_validation(setup_db):
     with pytest.raises(ValueError):
-        Author("") # Too short
+        Author("") 
     with pytest.raises(ValueError):
-        Author("A") # Too short
+        Author("A") 
     with pytest.raises(ValueError):
-        Author("This name is way too long for the author validation") # Too long
+        Author("This name is way too long for the author validation") 
     with pytest.raises(TypeError):
-        Author(123) # Not a string
+        Author(123) 
 
 def test_author_name_update(setup_db):
     author = Author("Old Name")
@@ -97,7 +96,6 @@ def test_author_delete(setup_db):
     author_id = author.id
     author.delete()
     assert Author.find_by_id(author_id) is None
-    # Ensure it's removed from cache
     assert author_id not in Author._all_authors
 
 def test_author_articles(setup_db):
@@ -123,7 +121,7 @@ def test_author_magazines(setup_db):
     author = Author.create("Test Author For Magazines")
     magazine1 = Magazine.create("Tech Today", "Technology")
     magazine2 = Magazine.create("Fashion Weekly", "Fashion")
-    magazine3 = Magazine.create("Tech Weekly", "Technology") # Same category, different mag
+    magazine3 = Magazine.create("Tech Weekly", "Technology") 
 
     Article.create("Article 1", "Content 1", author.id, magazine1.id)
     Article.create("Article 2", "Content 2", author.id, magazine2.id)
@@ -131,11 +129,10 @@ def test_author_magazines(setup_db):
 
 
     author_magazines = author.magazines()
-    assert len(author_magazines) == 3 # Should get 3 distinct magazines
+    assert len(author_magazines) == 3 
     assert any(m.name == "Tech Today" for m in author_magazines)
     assert any(m.name == "Fashion Weekly" for m in author_magazines)
     assert any(m.name == "Tech Weekly" for m in author_magazines)
-    # Check that they are Magazine objects
     assert all(isinstance(m, Magazine) for m in author_magazines)
 
 def test_author_topic_areas(setup_db):
@@ -147,17 +144,15 @@ def test_author_topic_areas(setup_db):
     magazine2 = Magazine.create("Fashion Weekly", "Fashion")
     magazine3 = Magazine.create("Science Monthly", "Science")
     magazine4 = Magazine.create("Gaming News", "Entertainment")
-    magazine5 = Magazine.create("Another Tech Mag", "Technology") # Duplicate category
+    magazine5 = Magazine.create("Another Tech Mag", "Technology") 
 
-    Article.create("Article 1", "Content 1", author.id, magazine1.id) # Technology
-    Article.create("Article 2", "Content 2", author.id, magazine2.id) # Fashion
-    Article.create("Article 3", "Content 3", author.id, magazine3.id) # Science
-    Article.create("Article 4", "Content 4", author.id, magazine5.id) # Technology (duplicate)
+    Article.create("Article 1", "Content 1", author.id, magazine1.id) 
+    Article.create("Article 2", "Content 2", author.id, magazine2.id) 
+    Article.create("Article 3", "Content 3", author.id, magazine3.id) 
+    Article.create("Article 4", "Content 4", author.id, magazine5.id) 
 
     topic_areas = author.topic_areas()
     assert sorted(topic_areas) == sorted(["Technology", "Fashion", "Science"])
-    assert len(topic_areas) == 3 # Should return unique topics
-
-    # Test with no articles
+    assert len(topic_areas) == 3 
     author_no_articles = Author.create("No Articles Author")
     assert author_no_articles.topic_areas() == []

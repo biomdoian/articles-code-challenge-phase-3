@@ -1,11 +1,10 @@
 import pytest
 import sqlite3
 from lib.models.magazine import Magazine
-from lib.models.author import Author # For contributing_authors
-from lib.models.article import Article # For relationships
+from lib.models.author import Author 
+from lib.models.article import Article 
 from lib.db.connection import get_connection
 
-# Fixture to set up a clean database for each test
 @pytest.fixture
 def setup_db():
     conn = get_connection()
@@ -15,8 +14,8 @@ def setup_db():
     cursor.execute("DELETE FROM magazines")
     conn.commit()
     conn.close()
-    yield # This allows the test to run
-    # Teardown (optional): Clean up after each test if necessary
+    yield 
+    
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM articles")
@@ -29,10 +28,10 @@ def test_magazine_creation(setup_db):
     magazine = Magazine("Vogue", "Fashion")
     assert magazine.name == "Vogue"
     assert magazine.category == "Fashion"
-    assert magazine.id is None # ID should be None before saving
+    assert magazine.id is None 
 
 def test_magazine_save(setup_db):
-    magazine = Magazine("Nat Geographic", "Science") # Shortened name
+    magazine = Magazine("Nat Geographic", "Science") 
     magazine.save()
     assert magazine.id is not None
     conn = get_connection()
@@ -41,7 +40,7 @@ def test_magazine_save(setup_db):
     saved_magazine = cursor.fetchone()
     conn.close()
     assert saved_magazine is not None
-    assert saved_magazine['name'] == "Nat Geographic" # FIX: Assertion matches shortened name
+    assert saved_magazine['name'] == "Nat Geographic" 
     assert saved_magazine['category'] == "Science"
 
 def test_magazine_find_by_id(setup_db):
@@ -56,11 +55,11 @@ def test_magazine_find_by_id_not_found(setup_db):
     assert Magazine.find_by_id(999) is None
 
 def test_magazine_find_by_name(setup_db):
-    magazine = Magazine("Sports Illus", "Sports") # Shortened name
+    magazine = Magazine("Sports Illus", "Sports") 
     magazine.save()
-    found_magazine = Magazine.find_by_name("Sports Illus") # FIX: Search by shortened name
+    found_magazine = Magazine.find_by_name("Sports Illus")
     assert found_magazine is not None
-    assert found_magazine.name == "Sports Illus" # FIX: Assertion matches shortened name
+    assert found_magazine.name == "Sports Illus" 
     assert found_magazine.id == magazine.id
 
 def test_magazine_find_by_name_not_found(setup_db):
@@ -78,19 +77,19 @@ def test_magazine_get_all(setup_db):
 
 def test_magazine_name_validation(setup_db):
     with pytest.raises(ValueError):
-        Magazine("A", "Category") # Too short
+        Magazine("A", "Category") 
     with pytest.raises(ValueError):
-        Magazine("", "Category") # Too short
+        Magazine("", "Category") 
     with pytest.raises(ValueError):
-        Magazine("This Name Is Way Too Long", "Category") # Too long
+        Magazine("This Name Is Way Too Long", "Category") 
     with pytest.raises(TypeError):
-        Magazine(123, "Category") # Not a string
+        Magazine(123, "Category") 
 
 def test_magazine_category_validation(setup_db):
     with pytest.raises(ValueError):
-        Magazine("Valid Name", "") # Empty category
+        Magazine("Valid Name", "") 
     with pytest.raises(TypeError):
-        Magazine("Valid Name", 123) # Not a string
+        Magazine("Valid Name", 123)
 
 def test_magazine_name_update(setup_db):
     magazine = Magazine("Old Mag Name", "Old Cat")
@@ -114,12 +113,12 @@ def test_magazine_delete(setup_db):
     magazine_id = magazine.id
     magazine.delete()
     assert Magazine.find_by_id(magazine_id) is None
-    # Ensure it's removed from cache
+    
     assert magazine_id not in Magazine._all_magazines
 
 def test_magazine_articles(setup_db):
     author = Author.create("Test Author for Mag Articles")
-    magazine = Magazine.create("Test Mag Arts", "Tech") # Shortened name
+    magazine = Magazine.create("Test Mag Arts", "Tech") 
 
     article1 = Article.create("Mag Article 1", "Content 1", author.id, magazine.id)
     article2 = Article.create("Mag Article 2", "Content 2", author.id, magazine.id)
@@ -133,12 +132,12 @@ def test_magazine_articles(setup_db):
 def test_magazine_authors(setup_db):
     author1 = Author.create("Author 1 for Magazine")
     author2 = Author.create("Author 2 for Magazine")
-    author3 = Author.create("Author 3 for Magazine") # Not associated
-    magazine = Magazine.create("Test Mag Auth", "Tech") # Shortened name
+    author3 = Author.create("Author 3 for Magazine") 
+    magazine = Magazine.create("Test Mag Auth", "Tech") 
 
     Article.create("Article A", "Content A", author1.id, magazine.id)
     Article.create("Article B", "Content B", author2.id, magazine.id)
-    Article.create("Article C", "Content C", author1.id, magazine.id) # Author 1 writes another
+    Article.create("Article C", "Content C", author1.id, magazine.id) 
 
     magazine_authors = magazine.authors()
     assert len(magazine_authors) == 2
@@ -149,7 +148,7 @@ def test_magazine_authors(setup_db):
 
 def test_magazine_article_titles(setup_db):
     author = Author.create("Test Author for Titles")
-    magazine = Magazine.create("Test Mag Titles", "Tech") # Shortened name
+    magazine = Magazine.create("Test Mag Titles", "Tech") 
 
     Article.create("Title One", "Content 1", author.id, magazine.id)
     Article.create("Title Two", "Content 2", author.id, magazine.id)

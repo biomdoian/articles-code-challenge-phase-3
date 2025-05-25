@@ -1,16 +1,14 @@
 from lib.db.connection import get_connection
-from lib.models.author import Author # Import Author
-from lib.models.magazine import Magazine # Import Magazine
-
+from lib.models.author import Author 
+from lib.models.magazine import Magazine 
 class Article:
     CONN = get_connection()
     CURSOR = CONN.cursor()
 
-    _all_articles = {} # Cache for all articles
-
+    _all_articles = {} 
+  #  Initialize the class with the database connection and cursor
     def __init__(self, title, content, author_id, magazine_id, id=None):
         self.id = id
-        # Use setters for validation
         self.title = title
         self.content = content
         self.author_id = author_id
@@ -22,8 +20,7 @@ class Article:
 
     @id.setter
     def id(self, value):
-        self._id = value # ID is set by the database, no strong validation here
-
+        self._id = value # ID is set by the database
     @property
     def title(self):
         return self._title
@@ -51,7 +48,7 @@ class Article:
     @property
     def author_id(self):
         return self._author_id
-
+     # Property for author_id with validation
     @author_id.setter
     def author_id(self, value):
         if value is None: # Check for None first
@@ -65,7 +62,7 @@ class Article:
     @property
     def magazine_id(self):
         return self._magazine_id
-
+     # Property for magazine_id with validation
     @magazine_id.setter
     def magazine_id(self, value):
         if value is None: # Check for None first
@@ -75,7 +72,7 @@ class Article:
         if value <= 0:
             raise ValueError("magazine_id must be a positive integer.")
         self._magazine_id = value
-
+# Save the article to the database
     def save(self):
         if self.id is None:
             sql = """
@@ -94,7 +91,7 @@ class Article:
             Article.CURSOR.execute(sql, (self.title, self.content, self.author_id, self.magazine_id, self.id))
             Article._all_articles[self.id] = self
         Article.CONN.commit()
-
+    # Class method to create a new article and save it to the database  
     @classmethod
     def create(cls, title, content, author_id, magazine_id):
         article = cls(title, content, author_id, magazine_id)
@@ -107,8 +104,7 @@ class Article:
         Article.CONN.commit()
         if self.id in Article._all_articles:
             del Article._all_articles[self.id]
-        self.id = None # Invalidate the object's ID
-
+        self.id = None 
     @classmethod
     def find_by_id(cls, id):
         if id in cls._all_articles:
@@ -122,7 +118,7 @@ class Article:
             cls._all_articles[article.id] = article
             return article
         return None
-
+     
     @classmethod
     def get_all(cls):
         sql = "SELECT * FROM articles"
@@ -135,7 +131,7 @@ class Article:
         return Author.find_by_id(self.author_id)
 
     def magazine(self):
-        from lib.models.magazine import Magazine # Local import to avoid circular dependency
+        from lib.models.magazine import Magazine
         return Magazine.find_by_id(self.magazine_id)
 
     def __repr__(self):

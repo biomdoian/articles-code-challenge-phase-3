@@ -15,8 +15,8 @@ def setup_db():
     cursor.execute("DELETE FROM magazines")
     conn.commit()
     conn.close()
-    yield # This allows the test to run
-    # Teardown (optional): Clean up after each test if necessary
+    yield 
+   
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM articles")
@@ -33,7 +33,7 @@ def test_article_creation(setup_db):
     assert article.content == "Content A"
     assert article.author_id == author.id
     assert article.magazine_id == magazine.id
-    assert article.id is None # ID should be None before saving
+    assert article.id is None 
 
 def test_article_save(setup_db):
     author = Author.create("Save Author")
@@ -61,7 +61,7 @@ def test_article_create_class_method(setup_db):
     assert article.content == "Content for created."
     assert article.author_id == author.id
     assert article.magazine_id == magazine.id
-    # Verify it's in the DB
+   
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM articles WHERE id = ?", (article.id,))
@@ -95,41 +95,40 @@ def test_article_title_validation(setup_db):
     author = Author.create("Val Author")
     magazine = Magazine.create("Val Magazine", "Sport")
     with pytest.raises(ValueError):
-        Article("", "Content", author.id, magazine.id) # Too short
+        Article("", "Content", author.id, magazine.id) 
     with pytest.raises(ValueError):
-        Article("A", "Content", author.id, magazine.id) # Too short
+        Article("A", "Content", author.id, magazine.id) 
     with pytest.raises(ValueError):
         Article("This title is extremely long and definitely exceeds the fifty character limit for an article", "Content", author.id, magazine.id) # Too long
     with pytest.raises(TypeError):
-        Article(123, "Content", author.id, magazine.id) # Not a string
+        Article(123, "Content", author.id, magazine.id) 
 
 def test_article_content_validation(setup_db):
     author = Author.create("Val Author 2")
     magazine = Magazine.create("Val Magazine 2", "Food")
     with pytest.raises(ValueError):
-        Article("Valid Title", "", author.id, magazine.id) # Empty content
+        Article("Valid Title", "", author.id, magazine.id) 
     with pytest.raises(TypeError):
-        Article("Valid Title", 123, author.id, magazine.id) # Not a string
+        Article("Valid Title", 123, author.id, magazine.id) 
 
 def test_article_author_id_validation(setup_db):
     author = Author.create("Val Author 3")
     magazine = Magazine.create("Val Magazine 3", "Tech")
     with pytest.raises(TypeError):
-        Article("Valid Title", "Valid Content", "not_an_int", magazine.id) # Not an integer
+        Article("Valid Title", "Valid Content", "not_an_int", magazine.id) 
     with pytest.raises(ValueError):
-        Article("Valid Title", "Valid Content", None, magazine.id) # Cannot be None
+        Article("Valid Title", "Valid Content", None, magazine.id) 
     with pytest.raises(ValueError):
-        Article("Valid Title", "Valid Content", 0, magazine.id) # Must be positive
-
+        Article("Valid Title", "Valid Content", 0, magazine.id) 
 def test_article_magazine_id_validation(setup_db):
     author = Author.create("Val Author 4")
     magazine = Magazine.create("Val Magazine 4", "Cars")
     with pytest.raises(TypeError):
-        Article("Valid Title", "Valid Content", author.id, "not_an_int") # Not an integer
+        Article("Valid Title", "Valid Content", author.id, "not_an_int") 
     with pytest.raises(ValueError):
-        Article("Valid Title", "Valid Content", author.id, None) # Cannot be None
+        Article("Valid Title", "Valid Content", author.id, None) 
     with pytest.raises(ValueError):
-        Article("Valid Title", "Valid Content", author.id, 0) # Must be positive
+        Article("Valid Title", "Valid Content", author.id, 0) 
 
 def test_article_author_property(setup_db):
     author = Author.create("Property Author")
@@ -158,11 +157,11 @@ def test_article_update(setup_db):
     article.title = "Updated Title"
     article.content = "Updated Content"
 
-    # Verify in memory
+    
     assert article.title == "Updated Title"
     assert article.content == "Updated Content"
 
-    # Verify in DB
+   
     updated_article = Article.find_by_id(article.id)
     assert updated_article.title == "Updated Title"
     assert updated_article.content == "Updated Content"
@@ -176,5 +175,4 @@ def test_article_delete(setup_db):
     article.delete()
 
     assert Article.find_by_id(article_id) is None
-    # Ensure it's removed from cache
     assert article_id not in Article._all_articles

@@ -4,11 +4,10 @@ class Magazine:
     CONN = get_connection()
     CURSOR = CONN.cursor()
 
-    _all_magazines = {} # Cache for all magazines
-
+    _all_magazines = {} 
+ # Initialize the class with the database connection and cursor
     def __init__(self, name, category, id=None):
         self.id = id
-        # Use setters for validation
         self.name = name
         self.category = category
 
@@ -18,7 +17,7 @@ class Magazine:
 
     @id.setter
     def id(self, value):
-        self._id = value # ID is set by the database
+        self._id = value 
 
     @property
     def name(self):
@@ -43,7 +42,7 @@ class Magazine:
         if len(value) == 0:
             raise ValueError("Category must be a non-empty string.")
         self._category = value
-
+   # Property for category with validation
     def save(self):
         if self.id is None:
             sql = """
@@ -62,7 +61,7 @@ class Magazine:
             Magazine.CURSOR.execute(sql, (self.name, self.category, self.id))
             Magazine._all_magazines[self.id] = self
         Magazine.CONN.commit()
-
+# Save the magazine to the database, either inserting or updating
     @classmethod
     def create(cls, name, category):
         magazine = cls(name, category)
@@ -76,7 +75,7 @@ class Magazine:
         if self.id in Magazine._all_magazines:
             del Magazine._all_magazines[self.id]
         self.id = None
-
+# Delete the magazine from the database and clear it from the cache
     @classmethod
     def find_by_id(cls, id):
         if id in cls._all_magazines:
@@ -90,7 +89,7 @@ class Magazine:
             cls._all_magazines[magazine.id] = magazine
             return magazine
         return None
-
+# Find a magazine by ID, either from the database
     @classmethod
     def find_by_name(cls, name):
         sql = "SELECT * FROM magazines WHERE name = ?"
@@ -101,7 +100,7 @@ class Magazine:
             cls._all_magazines[magazine.id] = magazine
             return magazine
         return None
-
+# Find a magazine by name, either from the database
     @classmethod
     def get_all(cls):
         sql = "SELECT * FROM magazines"
@@ -110,14 +109,14 @@ class Magazine:
         return [cls(row['name'], row['category'], row['id']) for row in rows]
 
     def articles(self):
-        from lib.models.article import Article # Local import to avoid circular dependency
+        from lib.models.article import Article 
         sql = "SELECT * FROM articles WHERE magazine_id = ?"
         Magazine.CURSOR.execute(sql, (self.id,))
         rows = Magazine.CURSOR.fetchall()
         return [Article(row['title'], row['content'], row['author_id'], row['magazine_id'], row['id']) for row in rows]
 
     def authors(self):
-        from lib.models.author import Author # Local import to avoid circular dependency
+        from lib.models.author import Author 
         sql = """
             SELECT DISTINCT authors.*
             FROM authors
@@ -134,7 +133,7 @@ class Magazine:
 
 
     def contributing_authors(self):
-        from lib.models.author import Author # Local import to avoid circular dependency
+        from lib.models.author import Author 
         sql = """
             SELECT authors.id, authors.name, COUNT(articles.id) as article_count
             FROM authors
@@ -147,7 +146,7 @@ class Magazine:
         rows = Magazine.CURSOR.fetchall()
         
         if not rows:
-            return None # Return None if no authors contribute >= 2 articles
+            return None 
         
         return [Author(row['name'], row['id']) for row in rows]
 

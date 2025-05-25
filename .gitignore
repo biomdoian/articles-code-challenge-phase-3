@@ -6,7 +6,7 @@ env/
 __pycache__/
 *.pyc
 
-# Database file (the one created by sqlite3)
+# Database file 
 *.db
 *.sqlite3
 

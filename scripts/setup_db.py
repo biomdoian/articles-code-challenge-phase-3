@@ -1,6 +1,5 @@
 import sqlite3
-from lib.db.connection import get_connection # Import the get_connection function
-
+from lib.db.connection import get_connection 
 def create_tables():
     conn = get_connection()
     cursor = conn.cursor()
